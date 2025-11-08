@@ -1,0 +1,23 @@
+{
+    "folders": [
+        {
+            "name": "Solitaire Root",
+            "path": "."
+        },
+        {
+            "name": "Solitaire Maven Project",
+            "path": "./solitaire"
+        }
+    ],
+    "settings": {
+        "java.configuration.detectJdksAtStart": true,
+        "java.import.maven.enabled": true,
+        "java.compile.nullAnalysis.mode": "automatic"
+    },
+    "extensions": {
+        "recommendations": [
+            "vscjava.vscode-java-pack",
+            "vscjava.vscode-maven"
+        ]
+    }
+}

@@ -1,0 +1,70 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "compile solitaire",
+			"type": "shell",
+			"command": "javac",
+			"args": [
+				"--release",
+				"21",
+				"-cp",
+				".",
+				"-d",
+				"target/classes",
+				"src/main/java/com/example/solitaire/Solitaire.java"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"presentation": {
+				"echo": true,
+				"reveal": "silent",
+				"focus": false,
+				"panel": "shared",
+				"showReuseMessage": true,
+				"clear": false
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "run solitaire",
+			"type": "shell",
+			"command": "java",
+			"args": [
+				"-cp",
+				"target/classes",
+				"com.example.solitaire.Solitaire"
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"group": "test",
+			"dependsOn": "compile solitaire",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "new",
+				"showReuseMessage": true,
+				"clear": false
+			}
+		},
+		{
+			"label": "test solitaire",
+			"type": "shell",
+			"command": "java",
+			"args": [
+				"-cp",
+				"target/classes",
+				"com.example.solitaire.Solitaire"
+			],
+			"isBackground": true,
+			"group": "test"
+		}
+	]
+}

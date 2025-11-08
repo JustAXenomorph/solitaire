@@ -1,0 +1,31 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Launch Solitaire",
+            "request": "launch",
+            "mainClass": "com.example.solitaire.Solitaire",
+            "projectName": "solitaire-game",
+            "cwd": "${workspaceFolder}",
+            "classPaths": [
+                "${workspaceFolder}/target/classes"
+            ],
+            "modulePaths": [],
+            "args": "",
+            "vmArgs": "",
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "java",
+            "name": "Launch Current File",
+            "request": "launch",
+            "mainClass": "${file}",
+            "cwd": "${workspaceFolder}",
+            "classPaths": [
+                "${workspaceFolder}/target/classes"
+            ],
+            "modulePaths": []
+        }
+    ]
+}
