@@ -486,6 +486,10 @@ public class Solitaire extends JFrame {
                 CardStackPanel panel = (CardStackPanel) e.getSource();
                 Card card = panel.getCardAt(e.getPoint());
                 if (card != null && card.isFaceUp()) {
+                    // Provide feedback for waste pile card selection
+                    if (panel == wastePanel && !wastePile.isEmpty()) {
+                        statusLabel.setText("Selected waste card: " + card + " (ready to move)");
+                    }
                     startDrag(panel, card, e.getPoint());
                 }
             }
@@ -552,8 +556,23 @@ public class Solitaire extends JFrame {
                 }
             }
         } else {
-            // For waste pile, only drag the top card
-            draggedCards.add(card);
+            // For waste pile, allow moving any visible card
+            if (source == wastePanel && !wastePile.isEmpty()) {
+                // Check if the clicked card is actually in the waste pile
+                if (wastePile.contains(card)) {
+                    // Allow moving any card from the waste pile
+                    draggedCards.add(card);
+                } else {
+                    // Card not found in waste pile - cancel drag
+                    draggedCard = null;
+                    dragSource = null;
+                    isDragging = false;
+                    return;
+                }
+            } else {
+                // For other single-card panels (foundations, etc.)
+                draggedCards.add(card);
+            }
         }
         
         // Initialize drag position
@@ -577,6 +596,16 @@ public class Solitaire extends JFrame {
     }
     
     private void tryAutoMoveToFoundation(CardStackPanel source, Card card) {
+        // For waste pile, allow auto-move of any visible card
+        if (source == wastePanel && !wastePile.isEmpty()) {
+            // Check if the clicked card is in the waste pile
+            if (!wastePile.contains(card)) {
+                statusLabel.setText("Card not found in waste pile");
+                return;
+            }
+            // Any waste card can be moved to foundation
+        }
+        
         // Try to move the card to an appropriate foundation
         for (int i = 0; i < 4; i++) {
             if (canMoveToFoundation(card, i)) {
@@ -969,23 +998,28 @@ public class Solitaire extends JFrame {
         // Debug: Add some logging to see what's being checked
         int movesFound = 0;
         
-        // Check waste pile to foundations
+        // Check waste pile to foundations - check all visible waste cards (up to 3)
         if (!wastePile.isEmpty()) {
-            Card wasteTop = wastePile.peek();
-            for (int i = 0; i < 4; i++) {
-                if (canMoveToFoundation(wasteTop, i)) {
-                    movesFound++;
-                    return true;
+            int visibleCards = Math.min(3, wastePile.size());
+            for (int cardIndex = 0; cardIndex < visibleCards; cardIndex++) {
+                Card wasteCard = wastePile.get(wastePile.size() - 1 - cardIndex);
+                
+                // Check if this waste card can move to foundations
+                for (int i = 0; i < 4; i++) {
+                    if (canMoveToFoundation(wasteCard, i)) {
+                        movesFound++;
+                        return true;
+                    }
                 }
-            }
-            
-            // Check waste pile to tableau
-            for (int i = 0; i < 7; i++) {
-                java.util.List<Card> singleCard = new ArrayList<>();
-                singleCard.add(wasteTop);
-                if (canMoveToTableau(singleCard, i)) {
-                    movesFound++;
-                    return true;
+                
+                // Check if this waste card can move to tableau
+                for (int i = 0; i < 7; i++) {
+                    java.util.List<Card> singleCard = new ArrayList<>();
+                    singleCard.add(wasteCard);
+                    if (canMoveToTableau(singleCard, i)) {
+                        movesFound++;
+                        return true;
+                    }
                 }
             }
         }
@@ -1450,7 +1484,7 @@ public class Solitaire extends JFrame {
         private static final int CARD_W = 72;
         private static final int CARD_H = 96;
         private static final int OVERLAP = 20;
-        private static final int HORIZONTAL_OFFSET = 24; // Horizontal offset for waste pile
+        private static final int HORIZONTAL_OFFSET = 20; // Horizontal offset for waste pile - reduced for better visibility
         private final boolean horizontalStacking;
         
         CardStackPanel() {
@@ -1516,20 +1550,32 @@ public class Solitaire extends JFrame {
         }
         
         Card getCardAt(Point p) {
-            // For horizontal stacking (waste pile), prioritize rightmost (topmost) cards
-            // For vertical stacking (tableau), prioritize bottommost visible cards
-            if (horizontalStacking) {
-                // Check from right to left (last to first) for waste pile
-                for (int i = cardViews.size() - 1; i >= 0; i--) {
+            if (horizontalStacking && cardViews.size() > 1) {
+                // For horizontal stacking (waste pile), check from left to right
+                // to allow clicking on partially obscured cards
+                for (int i = 0; i < cardViews.size(); i++) {
                     CardView view = cardViews.get(i);
                     Rectangle bounds = view.getBounds();
-                    if (bounds.contains(p)) {
-                        // Always return the top card for waste pile interaction
-                        return cardViews.get(cardViews.size() - 1).card;
+                    
+                    // For overlapped cards, only check the visible (left) portion
+                    if (i < cardViews.size() - 1) {
+                        // Not the last card - only check the left portion that's visible
+                        Rectangle visibleBounds = new Rectangle(
+                            bounds.x, bounds.y, 
+                            HORIZONTAL_OFFSET, bounds.height
+                        );
+                        if (visibleBounds.contains(p)) {
+                            return view.card;
+                        }
+                    } else {
+                        // Last card - check the full bounds
+                        if (bounds.contains(p)) {
+                            return view.card;
+                        }
                     }
                 }
             } else {
-                // Original behavior for tableau - return the actual clicked card
+                // Original behavior for vertical stacking or single cards
                 for (int i = cardViews.size() - 1; i >= 0; i--) {
                     CardView view = cardViews.get(i);
                     Rectangle bounds = view.getBounds();
@@ -1558,20 +1604,36 @@ public class Solitaire extends JFrame {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Semi-transparent background
-                g2.setColor(new Color(overlayBg.getRed(), overlayBg.getGreen(), overlayBg.getBlue(), 
-                                    (int)(overlayAlpha * 200)));
-                g2.fillRect(0, 0, getWidth(), getHeight());
-                
-                // Text
-                g2.setColor(new Color(overlayFg.getRed(), overlayFg.getGreen(), overlayFg.getBlue(), 
-                                    (int)(overlayAlpha * 255)));
+                // Calculate text dimensions
                 g2.setFont(new Font("Courier New", Font.BOLD, 48));
                 FontMetrics fm = g2.getFontMetrics();
                 int textWidth = fm.stringWidth(overlayText);
                 int textHeight = fm.getHeight();
-                g2.drawString(overlayText, (getWidth() - textWidth) / 2, 
-                            (getHeight() + textHeight) / 2);
+                
+                // Calculate pill dimensions and position
+                int padding = 40;
+                int pillWidth = textWidth + (padding * 2);
+                int pillHeight = textHeight + (padding);
+                int pillX = (getWidth() - pillWidth) / 2;
+                int pillY = (getHeight() - pillHeight) / 2;
+                
+                // Draw rounded pill background
+                g2.setColor(new Color(overlayBg.getRed(), overlayBg.getGreen(), overlayBg.getBlue(), 
+                                    (int)(overlayAlpha * 220)));
+                g2.fillRoundRect(pillX, pillY, pillWidth, pillHeight, pillHeight, pillHeight);
+                
+                // Draw subtle border
+                g2.setColor(new Color(overlayFg.getRed(), overlayFg.getGreen(), overlayFg.getBlue(), 
+                                    (int)(overlayAlpha * 100)));
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.drawRoundRect(pillX, pillY, pillWidth, pillHeight, pillHeight, pillHeight);
+                
+                // Draw text
+                g2.setColor(new Color(overlayFg.getRed(), overlayFg.getGreen(), overlayFg.getBlue(), 
+                                    (int)(overlayAlpha * 255)));
+                int textX = pillX + padding;
+                int textY = pillY + padding + fm.getAscent() - (fm.getHeight() - fm.getAscent()) / 2;
+                g2.drawString(overlayText, textX, textY);
                 
                 g2.dispose();
             }
