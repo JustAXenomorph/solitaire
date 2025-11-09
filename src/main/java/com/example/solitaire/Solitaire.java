@@ -55,6 +55,11 @@ public class Solitaire extends JFrame {
     private JLabel statsLabel = new JLabel();
     private JLabel statusLabel = new JLabel("Welcome to Solitaire!");
     
+    // Panel references for theme updates
+    private JPanel gameInfoPanel;
+    private JPanel scoreTimePanel;
+    private JPanel statsPanel;
+    
     // Card panels
     private CardStackPanel stockPanel;
     private CardStackPanel wastePanel;
@@ -237,14 +242,32 @@ public class Solitaire extends JFrame {
     }
     
     private void applyTheme() {
-        Color fg = NIGHT_MODE ? Color.LIGHT_GRAY : Color.BLACK;
-        Color bg = NIGHT_MODE ? new Color(30,30,30) : UIManager.getColor("Panel.background");
+        // Improved night mode colors for better readability
+        Color fg = NIGHT_MODE ? new Color(220, 220, 220) : Color.BLACK; // Lighter text for better contrast
+        Color bg = NIGHT_MODE ? new Color(45, 45, 50) : UIManager.getColor("Panel.background"); // Slightly lighter background
+        Color infoPanelBg = NIGHT_MODE ? new Color(55, 55, 60) : new Color(200, 200, 200, 255); // Dark panel background for night mode
         
         // Update labels
         scoreLabel.setForeground(fg);
         timeLabel.setForeground(fg);
         statsLabel.setForeground(fg);
         statusLabel.setForeground(fg);
+        
+        // Update panel backgrounds for night mode
+        if (gameInfoPanel != null) {
+            gameInfoPanel.setBackground(infoPanelBg);
+        }
+        if (scoreTimePanel != null) {
+            scoreTimePanel.setBackground(infoPanelBg);
+        }
+        if (statsPanel != null) {
+            statsPanel.setBackground(infoPanelBg);
+        }
+        
+        // Update label backgrounds
+        scoreLabel.setBackground(infoPanelBg);
+        timeLabel.setBackground(infoPanelBg);
+        statsLabel.setBackground(infoPanelBg);
         
         // Update menu bar
         if (menuBar != null) {
@@ -296,40 +319,40 @@ public class Solitaire extends JFrame {
         topPanel.setOpaque(false);
         
         // Center panel with all game info in a grey box
-        JPanel gameInfoPanel = new JPanel();
+        gameInfoPanel = new JPanel();
         gameInfoPanel.setLayout(new BoxLayout(gameInfoPanel, BoxLayout.Y_AXIS));
         gameInfoPanel.setOpaque(true);
-        gameInfoPanel.setBackground(new Color(200, 200, 200, 255)); // Fully opaque grey to prevent afterimages
+        gameInfoPanel.setBackground(new Color(200, 200, 200, 255)); // Initial background, will be updated by applyTheme()
         gameInfoPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createRaisedBevelBorder(),
             BorderFactory.createEmptyBorder(6, 12, 6, 12) // Reduced padding
         ));
         
         // First row: Score and Time
-        JPanel scoreTimePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 2)); // Reduced gaps
+        scoreTimePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 2)); // Reduced gaps
         scoreTimePanel.setOpaque(true); // Make opaque to prevent transparency issues
-        scoreTimePanel.setBackground(new Color(200, 200, 200, 255)); // Match parent background
+        scoreTimePanel.setBackground(new Color(200, 200, 200, 255)); // Initial background, will be updated by applyTheme()
         scoreLabel.setText("Score: 0");
         timeLabel.setText("Time: 00:00");
         
         // Ensure labels render cleanly to prevent afterimages
         scoreLabel.setOpaque(true);
         timeLabel.setOpaque(true);
-        scoreLabel.setBackground(new Color(200, 200, 200, 255)); // Fully opaque to prevent afterimages
-        timeLabel.setBackground(new Color(200, 200, 200, 255)); // Fully opaque to prevent afterimages
+        scoreLabel.setBackground(new Color(200, 200, 200, 255)); // Initial background, will be updated by applyTheme()
+        timeLabel.setBackground(new Color(200, 200, 200, 255)); // Initial background, will be updated by applyTheme()
         
         scoreTimePanel.add(scoreLabel);
         scoreTimePanel.add(timeLabel);
         
         // Second row: Statistics
-        JPanel statsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        statsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         statsPanel.setOpaque(true); // Make opaque to prevent transparency issues
-        statsPanel.setBackground(new Color(200, 200, 200, 255)); // Match parent background
+        statsPanel.setBackground(new Color(200, 200, 200, 255)); // Initial background, will be updated by applyTheme()
         updateStatsLabel();
         
         // Ensure stats label renders cleanly
         statsLabel.setOpaque(true);
-        statsLabel.setBackground(new Color(200, 200, 200, 255)); // Fully opaque to prevent afterimages
+        statsLabel.setBackground(new Color(200, 200, 200, 255)); // Initial background, will be updated by applyTheme()
         
         statsPanel.add(statsLabel);
         
@@ -1642,7 +1665,7 @@ public class Solitaire extends JFrame {
     
     // Felt panel background
     static class FeltPanel extends JPanel {
-        private final Color base = (NIGHT_MODE ? new Color(150, 15, 25) : new Color(8, 120, 40));
+        private final Color base = (NIGHT_MODE ? new Color(25, 30, 35) : new Color(8, 120, 40)); // Darker blue-gray for night mode
         
         FeltPanel() {
             setOpaque(true);
@@ -1668,7 +1691,7 @@ public class Solitaire extends JFrame {
             BufferedImage img = new BufferedImage(32, 32, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = img.createGraphics();
             
-            Color base = NIGHT_MODE ? new Color(150, 15, 25) : new Color(8, 120, 40);
+            Color base = NIGHT_MODE ? new Color(25, 30, 35) : new Color(8, 120, 40); // Darker blue-gray for night mode
             g.setColor(base);
             g.fillRect(0, 0, 32, 32);
             
